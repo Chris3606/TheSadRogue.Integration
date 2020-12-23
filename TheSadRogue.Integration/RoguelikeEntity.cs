@@ -4,6 +4,7 @@ using GoRogue.Components;
 using GoRogue.GameFramework;
 using GoRogue.GameFramework.Components;
 using GoRogue.Random;
+using JetBrains.Annotations;
 using SadConsole;
 using SadConsole.Entities;
 using SadRogue.Primitives;
@@ -12,16 +13,14 @@ namespace TheSadRogue.Integration
 {
 
     /// <summary>
-    /// Represents non-terrain map items.
+    /// Class that implements IGameObject and uses a SadConsole entity to represent non-terrain objects on a map.
     /// </summary>
+    [PublicAPI]
     public class RoguelikeEntity : Entity, IGameObject
     {
-        private bool _isWalkable;
-
-
         public RoguelikeEntity(ColoredGlyph appearance, Point position, int layer, bool isWalkable = true, bool isTransparent = true,
                                Func<uint>? idGenerator = null, ITaggableComponentCollection? customComponentContainer = null)
-            : base(appearance, layer)
+            : base(appearance, layer != 0 ? layer : throw new ArgumentException($"{nameof(RoguelikeEntity)} objects may not reside on the terrain layer", nameof(layer)))
         {
             idGenerator ??= GlobalRandom.DefaultRNG.NextUInt;
 
@@ -40,13 +39,14 @@ namespace TheSadRogue.Integration
             GoRogueComponents.ComponentRemoved += On_ComponentRemoved;
         }
 
-        private void OnSadConsolePositionChanged(object sender, ValueChangedEventArgs<Point> e)
+        private void OnSadConsolePositionChanged(object? sender, ValueChangedEventArgs<Point> e)
         {
             // Make sure we fire GoRogue's event as well.  This won't reset the property value on failure, so we simply
             // must not catch InvalidOperationException; that's what CanMove is for.
             Moved?.Invoke(this, new GameObjectPropertyChanged<Point>(this, e.OldValue, e.NewValue));
         }
 
+        #region IGameObject Property/Method Implementation
         /// <inheritdoc />
         Point IGameObject.Position
         {
@@ -58,6 +58,7 @@ namespace TheSadRogue.Integration
         /// <inheritdoc />
         public event EventHandler<GameObjectPropertyChanged<Point>>? Moved;
 
+        private bool _isWalkable;
         /// <inheritdoc />
         public bool IsWalkable
         {
@@ -97,6 +98,7 @@ namespace TheSadRogue.Integration
         {
             CurrentMap = newMap;
         }
+        #endregion
 
         #region Component Handlers
         private void On_ComponentAdded(object? s, ComponentChangedEventArgs e)

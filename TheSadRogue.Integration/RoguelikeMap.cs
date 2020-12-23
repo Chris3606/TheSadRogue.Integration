@@ -1,184 +1,33 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using GoRogue;
 using GoRogue.Components;
 using GoRogue.GameFramework;
 using GoRogue.Pathing;
 using GoRogue.SpatialMaps;
+using JetBrains.Annotations;
 using SadConsole;
-using SadConsole.Effects;
+using SadConsole.Entities;
 using SadRogue.Primitives;
-using SadRogue.Primitives.GridViews;
+using TheSadRogue.Integration.CellSurfaces;
 
 namespace TheSadRogue.Integration
 {
     /// <summary>
-    /// Surface that can be created and returned to render a map.
+    /// Class that inherits from GoRogue's GameFramework.Map, and provides facilities to create SadConsole renderers
+    /// that render the objects on the map.
     /// </summary>
-    public class MapSurface : GridViewBase<ColoredGlyph?>, ICellSurface
-    {
-        private BoundedRectangle _viewArea;
-        private Color _defaultBackground;
-        private Color _defaultForeground;
-        
-        private bool _isDirty = true;
-        
-        /// <summary>
-        /// The total width of the surface.
-        /// </summary>
-        public override int Width => _viewArea.BoundingBox.Width;
-
-        /// <summary>
-        /// The total height of the surface.
-        /// </summary>
-        public override int Height => _viewArea.BoundingBox.Height;
-
-        /// <inheritdoc />
-        public override ColoredGlyph? this[Point pos] => Map.GetTerrainAt<RoguelikeTile>(pos)?.Appearance;
-
-        /// <inheritdoc />
-        public IEnumerator<ColoredGlyph?> GetEnumerator()
-        {
-            foreach (var pos in this.Positions())
-                yield return this[pos];
-        }
-
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
-        /// <inheritdoc />
-        public void Resize(int width, int height, int bufferWidth, int bufferHeight, bool clear)
-            => throw new NotSupportedException($"Surfaces representing a {nameof(RoguelikeMap)} may not be resized.");
-
-        /// <inheritdoc />
-        public ICellSurface GetSubSurface(Rectangle view)
-            => throw new NotSupportedException($"Surfaces representing a {nameof(RoguelikeMap)} cannot have subsurfaces created from them currently.");
-
-        /// <inheritdoc />
-        public void SetSurface(in ICellSurface surface, Rectangle view = new Rectangle())
-            => throw new NotSupportedException($"Surfaces representing a {nameof(RoguelikeMap)} do not support SetSurface operations.");
-
-        /// <inheritdoc />
-        public void SetSurface(in ColoredGlyph[] cells, int width, int height, int bufferWidth, int bufferHeight)
-            => throw new NotSupportedException($"Surfaces representing a {nameof(RoguelikeMap)} do not support SetSurface operations.");
-
-        /// <inheritdoc />
-        public int TimesShiftedDown { get; set; }
-        
-        /// <inheritdoc />
-        public int TimesShiftedRight { get; set; }
-        
-        /// <inheritdoc />
-        public int TimesShiftedLeft { get; set; }
-        
-        /// <inheritdoc />
-        public int TimesShiftedUp { get; set; }
-        
-        /// <inheritdoc />
-        public bool UsePrintProcessor { get; set; }
-        
-        /// <inheritdoc />
-        public EffectsManager Effects { get; }
-        
-        /// <inheritdoc />
-        public Rectangle Area => _viewArea.BoundingBox;
-        /// <inheritdoc />
-        public Color DefaultForeground
-        {
-            get => _defaultForeground;
-            set { _defaultForeground = value; IsDirty = true; }
-        }
-
-        /// <inheritdoc />
-        public Color DefaultBackground
-        {
-            get => _defaultBackground;
-            set
-            {
-                _defaultBackground = value;
-                IsDirty = true;
-            }
-        }
-
-        /// <inheritdoc />
-        public int DefaultGlyph { get; set; }
-        
-        /// <inheritdoc />
-        public bool IsDirty
-        {
-            get => _isDirty;
-            set
-            {
-                if (_isDirty == value) return;
-
-                _isDirty = value;
-                IsDirtyChanged?.Invoke(this, EventArgs.Empty);
-            }
-        }
-        
-        /// <inheritdoc />
-        public bool IsScrollable => Height != _viewArea.Area.Height || Width != _viewArea.Area.Width;
-        
-        /// <inheritdoc />
-        public Rectangle View
-        {
-            get => _viewArea.Area;
-            set
-            {
-                _viewArea.SetArea(value);
-                IsDirty = true;
-            }
-        }
-
-        /// <inheritdoc />
-        public int ViewWidth
-        {
-            get => _viewArea.Area.Width;
-            set => _viewArea.SetArea(_viewArea.Area.WithWidth(value));
-        }
-
-        /// <inheritdoc />
-        public int ViewHeight
-        {
-            get => _viewArea.Area.Height;
-            set => _viewArea.SetArea(_viewArea.Area.WithHeight(value));
-        }
-        
-        /// <inheritdoc />
-        public Point ViewPosition
-        {
-            get => _viewArea.Area.Position;
-            set
-            {
-                _viewArea.SetArea(_viewArea.Area.WithPosition(value));
-                IsDirty = true;
-            }
-        }
-
-        /// <inheritdoc />
-        public event EventHandler? IsDirtyChanged;
-        
-        /// <summary>
-        /// The map the surface is representing.
-        /// </summary>
-        public RoguelikeMap Map { get; }
-        
-        internal MapSurface(RoguelikeMap map, int viewWidth, int viewHeight)
-        {
-            Map = map;
-            Effects = new EffectsManager(this);
-            
-            _viewArea = new BoundedRectangle((0, 0, map.Width, map.Height),
-                (0, 0, viewWidth, viewHeight));
-        }
-    }
-    
+    [PublicAPI]
     public class RoguelikeMap : Map
     {
-        private List<MapSurface> _surfaces;
-        public IReadOnlyList<MapSurface> Surfaces => _surfaces.AsReadOnly();
-        
-        
+        private readonly List<ScreenSurface> _renderers;
+        /// <summary>
+        /// List of renderers that currently render the map.
+        /// </summary>
+        public IReadOnlyList<ScreenSurface> Renderers => _renderers.AsReadOnly();
+
+
         /// <inheritdoc />
         public RoguelikeMap(int width, int height, int numberOfEntityLayers, Distance distanceMeasurement,
                             uint layersBlockingWalkability = 4294967295, uint layersBlockingTransparency = 4294967295,
@@ -188,34 +37,100 @@ namespace TheSadRogue.Integration
                 layersBlockingTransparency, entityLayersSupportingMultipleItems, customPlayerFOV, customPather,
                 customComponentContainer)
         {
-            _surfaces = new List<MapSurface>();
+            _renderers = new List<ScreenSurface>();
             
             ObjectAdded += OnObjectAdded;
             ObjectRemoved += OnObjectRemoved;
         }
 
-        public MapSurface CreateSurface(int viewWidth, int viewHeight)
+        private void OnTerrainAppearanceChanged(object? sender, EventArgs e)
         {
-            var surface = new MapSurface(this, viewWidth, viewHeight);
-            _surfaces.Add(surface);
-
-            return surface;
+            foreach (var surface in _renderers)
+                surface.IsDirty = true;
         }
 
-        public void DisposeOfSurface(MapSurface surface) => _surfaces.Remove(surface);
-
-        private void OnObjectRemoved(object sender, ItemEventArgs<IGameObject> e)
+        /// <summary>
+        /// Creates a renderer that renders this Map.  When no longer used, <see cref="DisposeOfRenderer"/> must
+        /// be called.
+        /// </summary>
+        /// <param name="viewSize">Viewport size for the renderer.</param>
+        /// <param name="font">Font to use for the renderer.</param>
+        /// <param name="fontSize">Size of font to use for the renderer.</param>
+        /// <returns>A renderer configured with the given parameters.</returns>
+        public ScreenSurface CreateRenderer(Point? viewSize = null, Font? font = null, Point? fontSize = null)
         {
-            if (e.Item.Layer == 0)
-                foreach (var surface in _surfaces)
-                    surface.IsDirty = true;
+            // Default view size is entire Map
+            var (viewWidth, viewHeight) = viewSize ?? (Width, Height);
+
+            // Create surface representing the terrain layer of the map
+            var cellSurface = new MapCellSurface(this, viewWidth, viewHeight);
+            
+            // Create screen surface that renders that cell surface and keep track of it
+            var renderer = new ScreenSurface(cellSurface, font, fontSize);
+            _renderers.Add(renderer);
+            
+            // Create an EntityRenderer and configure it with all the appropriate entities,
+            // then add it to the main surface
+            var entityRenderer = new Renderer();
+            // TODO: Reverse this order when it won't cause NullReferenceException
+            renderer.SadComponents.Add(entityRenderer);
+            entityRenderer.AddRange(Entities.Items.Cast<Entity>());
+
+            // Return renderer
+            return renderer;
         }
 
-        private void OnObjectAdded(object sender, ItemEventArgs<IGameObject> e)
+        /// <summary>
+        /// Removes a renderer from the list of renders displaying the map.  This must be called when a renderer is no
+        /// longer used, in order to ensure that the renderer resources are freed
+        /// </summary>
+        /// <param name="renderer">The renderer to unlink.</param>
+        public void DisposeOfRenderer(ScreenSurface renderer) => _renderers.Remove(renderer);
+
+        private void OnObjectAdded(object? sender, ItemEventArgs<IGameObject> e)
         {
-            if (e.Item.Layer == 0)
-                foreach (var surface in _surfaces)
-                    surface.IsDirty = true;
+            switch (e.Item)
+            {
+                case RoguelikeTile terrain:
+                    // Ensure we flag the surfaces of renderers as dirty on the add and on subsequent appearance changed events
+                    terrain.AppearanceChanged += OnTerrainAppearanceChanged;
+                    OnTerrainAppearanceChanged(terrain, EventArgs.Empty);
+                    break;
+                
+                case RoguelikeEntity entity:
+                    // Add to any entity renderers we have
+                    foreach (var renderer in _renderers)
+                    {
+                        var entityRenderer = renderer.GetSadComponent<Renderer>();
+                        entityRenderer?.Add(entity);
+                    }
+                    break;
+                
+                default:
+                    throw new InvalidOperationException(
+                        $"Objects added to a {nameof(RoguelikeMap)} must be of type {nameof(RoguelikeTile)} or {nameof(RoguelikeEntity)}");
+            }
+        }
+
+        private void OnObjectRemoved(object? sender, ItemEventArgs<IGameObject> e)
+        {
+            switch (e.Item)
+            {
+                case RoguelikeTile terrain:
+                    // Ensure we flag the surfaces of renderers as dirty on the remove and unlike our changed handler
+                    terrain.AppearanceChanged -= OnTerrainAppearanceChanged;
+                    OnTerrainAppearanceChanged(e.Item, EventArgs.Empty);
+                    break;
+                
+                case RoguelikeEntity entity:
+                    // Remove from any entity renderers we have
+                    foreach (var renderer in _renderers)
+                    {
+                        var entityRenderer = renderer.GetSadComponent<Renderer>();
+                        entityRenderer?.Remove(entity);
+                    }
+                    break;
+            }
         }
     }
 }
