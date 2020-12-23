@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using GoRogue.Components;
 using GoRogue.GameFramework;
 using JetBrains.Annotations;
@@ -45,5 +46,46 @@ namespace TheSadRogue.Integration
         {
             _appearance = appearance;
         }
+
+        /// <summary>
+        /// Sets the glyph of the appearance of the object.
+        /// </summary>
+        /// <param name="glyph"/>
+        public void SetGlyph(int glyph)
+        {
+            if (Appearance.Glyph == glyph)
+                return;
+            
+            Appearance.Glyph = glyph;
+            AppearanceChanged?.Invoke(this, EventArgs.Empty);
+        }
+        
+        /// <summary>
+        /// Sets the foreground color of the glyph for the object.
+        /// </summary>
+        /// <param name="foreground"/>
+        public void SetForeground(Color foreground)
+        {
+            if (Appearance.Foreground == foreground)
+                return;
+            
+            Appearance.Foreground = foreground;
+            AppearanceChanged?.Invoke(this, EventArgs.Empty);
+        }
+        
+        /// <summary>
+        /// Sets the foreground color of the glyph for the object.
+        /// </summary>
+        /// <param name="background"/>
+        public void SetBackground(Color background)
+        {
+            if (Appearance.Background == background)
+                return;
+            
+            Appearance.Background = background;
+            AppearanceChanged?.Invoke(this, EventArgs.Empty);
+        }
+        
+        // TODO: Need functions for Mirror, decorators, etc
     }
 }

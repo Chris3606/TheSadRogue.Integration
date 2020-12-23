@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using GoRogue;
 using GoRogue.Components;
@@ -15,6 +16,34 @@ using TheSadRogue.Integration.CellSurfaces;
 namespace TheSadRogue.Integration
 {
     /// <summary>
+    /// Arguments to ControlledGameObjectChanged event.
+    /// </summary>
+    [PublicAPI]
+    public class ControlledGameObjectChangedArgs : EventArgs
+    {
+        /// <summary>
+        /// The old object that was previously assigned to the field.
+        /// </summary>
+        public RoguelikeEntity? OldObject { get; }
+
+        /// <summary>
+        /// The new object that was previously assigned to the field.
+        /// </summary>
+        public RoguelikeEntity? NewObject { get; }
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="oldObject"/>
+        /// <param name="newObject"/>
+        public ControlledGameObjectChangedArgs(RoguelikeEntity? oldObject, RoguelikeEntity? newObject)
+        {
+            OldObject = oldObject;
+            NewObject = newObject;
+        }
+    }
+
+    /// <summary>
     /// Class that inherits from GoRogue's GameFramework.Map, and provides facilities to create SadConsole renderers
     /// that render the objects on the map.
     /// </summary>
@@ -26,6 +55,36 @@ namespace TheSadRogue.Integration
         /// List of renderers that currently render the map.
         /// </summary>
         public IReadOnlyList<ScreenSurface> Renderers => _renderers.AsReadOnly();
+
+        private RoguelikeEntity? _controlledGameObject;
+
+        /// <summary>
+        /// Object being controlled by a player.  When set, adds/removes objects from the map as appropriate.
+        /// </summary>
+        public RoguelikeEntity? ControlledGameObject
+        {
+            get => _controlledGameObject;
+            set
+            {
+                if (_controlledGameObject == value)
+                    return;
+
+                var old = _controlledGameObject;
+                if (old != null)
+                    RemoveEntity(old);
+                
+                _controlledGameObject = value;
+                if (value != null && !Entities.Contains(value))
+                    AddEntity(value);
+                
+                ControlledGameObjectChanged?.Invoke(this, new ControlledGameObjectChangedArgs(old, value));
+            }
+        }
+
+        /// <summary>
+        /// Fired when <see cref="ControlledGameObject"/> is changed.
+        /// </summary>
+        public event EventHandler<ControlledGameObjectChangedArgs>? ControlledGameObjectChanged;
 
 
         /// <inheritdoc />
@@ -61,6 +120,7 @@ namespace TheSadRogue.Integration
         {
             // Default view size is entire Map
             var (viewWidth, viewHeight) = viewSize ?? (Width, Height);
+            Debug.WriteLine(viewSize);
 
             // Create surface representing the terrain layer of the map
             var cellSurface = new MapCellSurface(this, viewWidth, viewHeight);
