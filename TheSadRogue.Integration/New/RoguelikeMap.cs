@@ -151,7 +151,7 @@ namespace TheSadRogue.Integration.New
             // TODO: Reverse this order of add to surface vs add objects when it won't cause NullReferenceException
 
             // Create and configure terrain renderer
-            var terrainRenderer = new Renderer();
+            var terrainRenderer = new Renderer { DoEntityUpdate = false };
             screenSurface.SadComponents.Add(terrainRenderer);
             foreach (var terrain in Terrain.Positions().Select(GetTerrainAt<RoguelikeObject>))
             {
