@@ -9,7 +9,7 @@ namespace TheSadRogue.Integration.Example.Terrain
     public class Floor : RoguelikeTile
     {
         public Floor(Point position)
-            : base(new ColoredGlyph(Color.White, Color.Transparent, '.'), position, true, true)
+            : base(new ColoredGlyph(Color.White, Color.Transparent, '.'), position)
         { }
     }
 }

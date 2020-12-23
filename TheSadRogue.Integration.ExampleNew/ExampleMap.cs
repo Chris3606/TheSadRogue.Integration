@@ -6,10 +6,10 @@ namespace TheSadRogue.Integration.ExampleNew
 {
     public enum MapLayer
     {
-        TERRAIN,
-        ITEMS,
-        MONSTERS,
-        PLAYER
+        Terrain,
+        Items,
+        Monsters,
+        Player
     }
 
     public class ExampleMap : New.RoguelikeMap

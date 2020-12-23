@@ -38,6 +38,15 @@ namespace TheSadRogue.Integration
         /// </summary>
         public event EventHandler? AppearanceChanged;
 
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="appearance"/>
+        /// <param name="position"/>
+        /// <param name="isWalkable"/>
+        /// <param name="isTransparent"/>
+        /// <param name="idGenerator"/>
+        /// <param name="customComponentContainer"/>
         public RoguelikeTile(ColoredGlyph appearance, Point position, bool isWalkable = true, bool isTransparent = true,
                              Func<uint>? idGenerator = null,
                              ITaggableComponentCollection? customComponentContainer = null)

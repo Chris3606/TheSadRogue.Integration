@@ -17,6 +17,16 @@ namespace TheSadRogue.Integration.New
     [PublicAPI]
     public class RoguelikeObject : Entity, IGameObject
     {
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="appearance"/>
+        /// <param name="position"/>
+        /// <param name="layer"/>
+        /// <param name="isWalkable"/>
+        /// <param name="isTransparent"/>
+        /// <param name="idGenerator"/>
+        /// <param name="customComponentContainer"/>
         public RoguelikeObject(ColoredGlyph appearance, Point position, int layer, bool isWalkable = true, bool isTransparent = true,
                                Func<uint>? idGenerator = null, ITaggableComponentCollection? customComponentContainer = null)
             : base(appearance, layer)

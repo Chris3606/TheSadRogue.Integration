@@ -10,7 +10,7 @@ namespace TheSadRogue.Integration.ExampleNew.Terrain
     public class Wall : RoguelikeObject
     {
         public Wall(Point position)
-            : base(new ColoredGlyph(Color.White, Color.Transparent, '#'), position, (int)MapLayer.TERRAIN, false, false)
+            : base(new ColoredGlyph(Color.White, Color.Transparent, '#'), position, (int)MapLayer.Terrain, false, false)
         { }
     }
 }

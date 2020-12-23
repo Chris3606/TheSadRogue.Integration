@@ -1,5 +1,4 @@
-﻿using System;
-using GoRogue.MapGeneration;
+﻿using GoRogue.MapGeneration;
 using SadConsole;
 using TheSadRogue.Integration.ExampleNew.MapGeneration;
 using TheSadRogue.Integration.ExampleNew.Screens;
@@ -13,7 +12,7 @@ namespace TheSadRogue.Integration.ExampleNew
         
         public static MapScreen? MapScreen { get; private set; }
 
-        static void Main(string[] args)
+        static void Main()
         {
             // Setup the engine and create the main window.
             Game.Create(Width, Height);

@@ -14,7 +14,7 @@ namespace TheSadRogue.Integration.Example
         //public static RoguelikeMap? Map;
         public static MapScreen? MapScreen { get; private set; }
 
-        static void Main(string[] args)
+        static void Main()
         {
             // Setup the engine and create the main window.
             Game.Create(Width, Height);
