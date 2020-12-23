@@ -163,8 +163,8 @@ namespace TheSadRogue.Integration.CellSurfaces
             _map = map;
             Effects = new EffectsManager(this);
             
-            _viewArea = new BoundedRectangle((0, 0, map.Width, map.Height),
-                (0, 0, viewWidth, viewHeight));
+            _viewArea = new BoundedRectangle((0, 0, viewWidth, viewHeight),
+                (0, 0, map.Width, map.Height));
         }
     }
 }

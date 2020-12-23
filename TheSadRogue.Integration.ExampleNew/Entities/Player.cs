@@ -2,13 +2,14 @@
 using SadConsole;
 using SadConsole.Input;
 using SadRogue.Primitives;
+using TheSadRogue.Integration.New;
 
-namespace TheSadRogue.Integration.Example.Entities
+namespace TheSadRogue.Integration.ExampleNew.Entities
 {
-    public class Player : RoguelikeEntity
+    public class Player : RoguelikeObject
     {
         public int FOVRadius { get; }
-        
+
         public Player(Point position, int fovRadius)
             : base(new ColoredGlyph(Color.Yellow, Color.Transparent, '@'), position,
                 (int) MapLayer.PLAYER, false)
@@ -35,7 +36,7 @@ namespace TheSadRogue.Integration.Example.Entities
                     Position += dir;
                 return true;
             }
-            
+
             return base.ProcessKeyboard(keyboard);
         }
     }

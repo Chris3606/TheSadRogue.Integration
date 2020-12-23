@@ -1,17 +1,16 @@
-﻿using GoRogue.MapGeneration;
+﻿using System;
+using GoRogue.MapGeneration;
 using SadConsole;
-using TheSadRogue.Integration.Example.MapGeneration;
-using TheSadRogue.Integration.Example.Screens;
+using TheSadRogue.Integration.ExampleNew.MapGeneration;
+using TheSadRogue.Integration.ExampleNew.Screens;
 
-namespace TheSadRogue.Integration.Example
+namespace TheSadRogue.Integration.ExampleNew
 {
     public static class Program
     {
-
         public const int Width = 80;
         public const int Height = 25;
-
-        //public static RoguelikeMap? Map;
+        
         public static MapScreen? MapScreen { get; private set; }
 
         static void Main(string[] args)

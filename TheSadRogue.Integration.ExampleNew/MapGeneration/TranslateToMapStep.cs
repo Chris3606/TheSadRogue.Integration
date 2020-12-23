@@ -1,13 +1,14 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using GoRogue.GameFramework;
 using GoRogue.MapGeneration;
 using GoRogue.MapGeneration.ContextComponents;
 using SadRogue.Primitives;
 using SadRogue.Primitives.GridViews;
-using TheSadRogue.Integration.Example.Entities;
-using TheSadRogue.Integration.Example.Terrain;
+using TheSadRogue.Integration.ExampleNew.Entities;
+using TheSadRogue.Integration.ExampleNew.Terrain;
 
-namespace TheSadRogue.Integration.Example.MapGeneration
+namespace TheSadRogue.Integration.ExampleNew.MapGeneration
 {
     /// <summary>
     /// Takes the data in the map generation context and translates it to an <see cref="ExampleMap"/>.

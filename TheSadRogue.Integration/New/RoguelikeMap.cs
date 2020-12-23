@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using GoRogue;
 using GoRogue.Components;
@@ -10,10 +11,44 @@ using JetBrains.Annotations;
 using SadConsole;
 using SadConsole.Entities;
 using SadRogue.Primitives;
-using TheSadRogue.Integration.CellSurfaces;
+using SadRogue.Primitives.GridViews;
 
-namespace TheSadRogue.Integration
+namespace TheSadRogue.Integration.New
 {
+    /// <summary>
+    /// Represents a renderer and its entity rendering components
+    /// </summary>
+    public struct RendererComponents
+    {
+        /// <summary>
+        /// Screen surface acting as parent object for map renderer
+        /// </summary>
+        public ScreenSurface ScreenSurface;
+        
+        /// <summary>
+        /// Component that renders terrain.
+        /// </summary>
+        public Renderer TerrainRenderer;
+        
+        /// <summary>
+        /// Component that renders non-terrain.
+        /// </summary>
+        public Renderer EntityRenderer;
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="screenSurface"/>
+        /// <param name="terrainRenderer"/>
+        /// <param name="entityRenderer"/>
+        public RendererComponents(ScreenSurface screenSurface, Renderer terrainRenderer, Renderer entityRenderer)
+        {
+            ScreenSurface = screenSurface;
+            TerrainRenderer = terrainRenderer;
+            EntityRenderer = entityRenderer;
+        }
+    }
+    
     /// <summary>
     /// Arguments to ControlledGameObjectChanged event.
     /// </summary>
@@ -23,44 +58,41 @@ namespace TheSadRogue.Integration
         /// <summary>
         /// The old object that was previously assigned to the field.
         /// </summary>
-        public RoguelikeEntity? OldObject { get; }
+        public RoguelikeObject? OldObject { get; }
 
         /// <summary>
         /// The new object that was previously assigned to the field.
         /// </summary>
-        public RoguelikeEntity? NewObject { get; }
+        public RoguelikeObject? NewObject { get; }
 
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="oldObject"/>
         /// <param name="newObject"/>
-        public ControlledGameObjectChangedArgs(RoguelikeEntity? oldObject, RoguelikeEntity? newObject)
+        public ControlledGameObjectChangedArgs(RoguelikeObject? oldObject, RoguelikeObject? newObject)
         {
             OldObject = oldObject;
             NewObject = newObject;
         }
     }
-
+    
     /// <summary>
-    /// Class that inherits from GoRogue's GameFramework.Map, and provides facilities to create SadConsole renderers
-    /// that render the objects on the map.
+    /// A map of <see cref="RoguelikeObject"/> instances.
     /// </summary>
-    [PublicAPI]
     public class RoguelikeMap : Map
     {
-        private readonly List<ScreenSurface> _renderers;
+        private readonly List<RendererComponents> _renderers;
         /// <summary>
-        /// List of renderers that currently render the map.
+        /// List of renderers and their constituent components that currently render the map.
         /// </summary>
-        public IReadOnlyList<ScreenSurface> Renderers => _renderers.AsReadOnly();
-
-        private RoguelikeEntity? _controlledGameObject;
-
+        public IReadOnlyList<RendererComponents> Renderers => _renderers.AsReadOnly();
+        
+        private RoguelikeObject? _controlledGameObject;
         /// <summary>
         /// Object being controlled by a player.  When set, adds/removes objects from the map as appropriate.
         /// </summary>
-        public RoguelikeEntity? ControlledGameObject
+        public RoguelikeObject? ControlledGameObject
         {
             get => _controlledGameObject;
             set
@@ -84,8 +116,7 @@ namespace TheSadRogue.Integration
         /// Fired when <see cref="ControlledGameObject"/> is changed.
         /// </summary>
         public event EventHandler<ControlledGameObjectChangedArgs>? ControlledGameObjectChanged;
-
-
+        
         /// <inheritdoc />
         public RoguelikeMap(int width, int height, int numberOfEntityLayers, Distance distanceMeasurement,
                             uint layersBlockingWalkability = 4294967295, uint layersBlockingTransparency = 4294967295,
@@ -95,18 +126,12 @@ namespace TheSadRogue.Integration
                 layersBlockingTransparency, entityLayersSupportingMultipleItems, customPlayerFOV, customPather,
                 customComponentContainer)
         {
-            _renderers = new List<ScreenSurface>();
+            _renderers = new List<RendererComponents>();
             
             ObjectAdded += OnObjectAdded;
             ObjectRemoved += OnObjectRemoved;
         }
-
-        private void OnTerrainAppearanceChanged(object? sender, EventArgs e)
-        {
-            foreach (var surface in _renderers)
-                surface.IsDirty = true;
-        }
-
+        
         /// <summary>
         /// Creates a renderer that renders this Map.  When no longer used, <see cref="DisposeOfRenderer"/> must
         /// be called.
@@ -119,23 +144,34 @@ namespace TheSadRogue.Integration
         {
             // Default view size is entire Map
             var (viewWidth, viewHeight) = viewSize ?? (Width, Height);
+            
+            // Create base screen surface
+            var screenSurface = new ScreenSurface(viewWidth, viewHeight, Width, Height);
+            
+            // TODO: Reverse this order of add to surface vs add objects when it won't cause NullReferenceException
 
-            // Create surface representing the terrain layer of the map
-            var cellSurface = new MapCellSurface(this, viewWidth, viewHeight);
-            
-            // Create screen surface that renders that cell surface and keep track of it
-            var renderer = new ScreenSurface(cellSurface, font, fontSize);
-            _renderers.Add(renderer);
-            
-            // Create an EntityRenderer and configure it with all the appropriate entities,
-            // then add it to the main surface
+            // Create and configure terrain renderer
+            var terrainRenderer = new Renderer();
+            screenSurface.SadComponents.Add(terrainRenderer);
+            foreach (var terrain in Terrain.Positions().Select(GetTerrainAt<RoguelikeObject>))
+            {
+                if (terrain == null)
+                    continue;
+
+                terrainRenderer.Add(terrain);
+            }
+
+            // Create and configure entity renderer
             var entityRenderer = new Renderer();
-            // TODO: Reverse this order when it won't cause NullReferenceException
-            renderer.SadComponents.Add(entityRenderer);
-            entityRenderer.AddRange(Entities.Items.Cast<Entity>());
+            screenSurface.SadComponents.Add(entityRenderer);
+            foreach (var entity in Entities.Items.Cast<Entity>())
+                entityRenderer.Add(entity);
+            
+            // Create and add wrapper
+            var renderer = new RendererComponents(screenSurface, terrainRenderer, entityRenderer);
+            _renderers.Add(renderer);
 
-            // Return renderer
-            return renderer;
+            return screenSurface;
         }
 
         /// <summary>
@@ -143,51 +179,41 @@ namespace TheSadRogue.Integration
         /// longer used, in order to ensure that the renderer resources are freed
         /// </summary>
         /// <param name="renderer">The renderer to unlink.</param>
-        public void DisposeOfRenderer(ScreenSurface renderer) => _renderers.Remove(renderer);
+        public void DisposeOfRenderer(ScreenSurface renderer)
+            => _renderers.RemoveAll(components => components.ScreenSurface == renderer);
 
         private void OnObjectAdded(object? sender, ItemEventArgs<IGameObject> e)
         {
-            switch (e.Item)
+            if (!(e.Item is RoguelikeObject obj))
+                throw new InvalidOperationException(
+                    $"Only objects of type {nameof(RoguelikeObject)} can be added to a {nameof(RoguelikeMap)}");
+            
+            if (e.Item.Layer == 0) // Terrain
             {
-                case RoguelikeTile terrain:
-                    // Ensure we flag the surfaces of renderers as dirty on the add and on subsequent appearance changed events
-                    terrain.AppearanceChanged += OnTerrainAppearanceChanged;
-                    OnTerrainAppearanceChanged(terrain, EventArgs.Empty);
-                    break;
-                
-                case RoguelikeEntity entity:
-                    // Add to any entity renderers we have
-                    foreach (var renderer in _renderers)
-                    {
-                        var entityRenderer = renderer.GetSadComponent<Renderer>();
-                        entityRenderer?.Add(entity);
-                    }
-                    break;
-                
-                default:
-                    throw new InvalidOperationException(
-                        $"Objects added to a {nameof(RoguelikeMap)} must be of type {nameof(RoguelikeTile)} or {nameof(RoguelikeEntity)}");
+                foreach (var renderer in _renderers)
+                    renderer.TerrainRenderer.Add(obj);
+            }
+            else // Entities
+            {
+                foreach (var renderer in _renderers)
+                    renderer.EntityRenderer.Add(obj);
             }
         }
-
+        
         private void OnObjectRemoved(object? sender, ItemEventArgs<IGameObject> e)
         {
-            switch (e.Item)
+            // Cast is fine because nothing else can even be added
+            var obj = (RoguelikeObject) e.Item;
+            
+            if (e.Item.Layer == 0) // Terrain
             {
-                case RoguelikeTile terrain:
-                    // Ensure we flag the surfaces of renderers as dirty on the remove and unlike our changed handler
-                    terrain.AppearanceChanged -= OnTerrainAppearanceChanged;
-                    OnTerrainAppearanceChanged(e.Item, EventArgs.Empty);
-                    break;
-                
-                case RoguelikeEntity entity:
-                    // Remove from any entity renderers we have
-                    foreach (var renderer in _renderers)
-                    {
-                        var entityRenderer = renderer.GetSadComponent<Renderer>();
-                        entityRenderer?.Remove(entity);
-                    }
-                    break;
+                foreach (var renderer in _renderers)
+                    renderer.TerrainRenderer.Remove(obj);
+            }
+            else // Entities
+            {
+                foreach (var renderer in _renderers)
+                    renderer.EntityRenderer.Remove(obj);
             }
         }
     }
