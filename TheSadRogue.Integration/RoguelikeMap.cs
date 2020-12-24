@@ -133,6 +133,7 @@ namespace TheSadRogue.Integration
         }
 
         #region Renderer Generation/Syncing
+        // TODO: Temp, should really just flag this based on appearance.
         private void PlayerFOVOnRecalculated(object? sender, FOVRecalculatedEventArgs e)
         {
             foreach (var surface in _renderers)

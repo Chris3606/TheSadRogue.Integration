@@ -46,7 +46,10 @@ namespace TheSadRogue.Integration.FOVVisibilityHandlers
         protected override void UpdateTerrainSeen(RoguelikeTile terrain)
         {
             terrain.Appearance.IsVisible = true;
-            terrain.SetForeground(Color.White);
+            //terrain.SetForeground(Color.White);
+            
+            
+            
             //terrain.Appearance.Decorators = Array.Empty<CellDecorator>();
             // TODO: Can't handle IsDirty properly...
 
@@ -62,7 +65,10 @@ namespace TheSadRogue.Integration.FOVVisibilityHandlers
         {
             if (Map.PlayerExplored[terrain.Position])
             {
-                terrain.SetForeground(ExploredColor);
+                //terrain.SetForeground(ExploredColor);
+                
+                
+                
                 // TODO: Why no background?
                 // TODO: Can't handle IsDirty properly...
                 // TODO: Busted if current cell has decorators :(

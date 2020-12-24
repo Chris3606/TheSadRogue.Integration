@@ -52,7 +52,7 @@ namespace TheSadRogue.Integration.Example.MapGeneration
             //yield return null;
             
             // Spawn player
-            var player = new Player(map.WalkabilityView.RandomPosition(true), 10);
+            var player = new Player(map.WalkabilityView.RandomPosition(true), 1);
             map.ControlledGameObject = player;
         }
         

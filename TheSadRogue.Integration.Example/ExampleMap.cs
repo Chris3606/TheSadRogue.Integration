@@ -25,7 +25,7 @@ namespace TheSadRogue.Integration.Example
         public ExampleMap(int width, int height)
             : base(width, height, Enum.GetNames(typeof(MapLayer)).Length - 1, Distance.Chebyshev)
         {
-            _fovVisibilityHandler = new DefaultFOVVisibilityHandler<Player>(this, Color.Gray);
+            _fovVisibilityHandler = new DefaultFOVVisibilityHandler<Player>(this, Color.DarkGray);
         }
 
         /// <summary>
