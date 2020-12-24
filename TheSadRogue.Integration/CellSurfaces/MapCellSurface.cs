@@ -11,7 +11,8 @@ namespace TheSadRogue.Integration.CellSurfaces
     /// <summary>
     /// Surface that can be created used to create a ScreenSurface to render the terrain layer of a map.
     /// </summary>
-    internal class MapCellSurface : GridViewBase<ColoredGlyph?>, ICellSurface
+    internal class MapCellSurface<TControlled> : GridViewBase<ColoredGlyph?>, ICellSurface
+        where TControlled : RoguelikeEntity
     {
         private readonly BoundedRectangle _viewArea;
         private Color _defaultBackground;
@@ -156,9 +157,9 @@ namespace TheSadRogue.Integration.CellSurfaces
         /// <inheritdoc />
         public event EventHandler? IsDirtyChanged;
 
-        private RoguelikeMap _map;
+        private RoguelikeMap<TControlled> _map;
         
-        public MapCellSurface(RoguelikeMap map, int viewWidth, int viewHeight)
+        public MapCellSurface(RoguelikeMap<TControlled> map, int viewWidth, int viewHeight)
         {
             _map = map;
             Effects = new EffectsManager(this);

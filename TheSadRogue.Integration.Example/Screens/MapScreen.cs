@@ -1,7 +1,7 @@
-﻿using System.Diagnostics;
-using GoRogue.GameFramework;
+﻿using GoRogue.GameFramework;
 using SadConsole;
 using SadRogue.Primitives;
+using TheSadRogue.Integration.Example.Entities;
 
 namespace TheSadRogue.Integration.Example.Screens
 {
@@ -29,21 +29,18 @@ namespace TheSadRogue.Integration.Example.Screens
             }
             
             // Add FPS counter component
-            MapRenderer.SadComponents.Add(new Components.FPSCounterComponent());
+            MapRenderer.SadComponents.Add(new TheSadRogue.Integration.Components.FPSCounterComponent());
         }
 
         #region Player Event Handling
-        private void MapOnPlayerChanged(object? sender, ControlledGameObjectChangedArgs e)
+        private void MapOnPlayerChanged(object? sender, ControlledGameObjectChangedArgs<Player> e)
         {
             if (e.OldObject != null)
-            {
                 e.OldObject.Moved -= PlayerOnMoved;
-            }
 
             if (e.NewObject != null)
             {
                 e.NewObject.Moved += PlayerOnMoved;
-                e.NewObject.IsFocused = true;
                 HandlePlayerMoved();
             }
         }
@@ -55,7 +52,7 @@ namespace TheSadRogue.Integration.Example.Screens
         private void HandlePlayerMoved()
         {
             MapRenderer.Surface.View = MapRenderer.Surface.View.WithCenter(Map.ControlledGameObject!.Position);
-            //Map.PlayerFOV.Calculate(Map.ControlledGameObject!.Position, Map.ControlledGameObject.FOVRadius, Distance.Chebyshev);
+            Map.PlayerFOV.Calculate(Map.ControlledGameObject!.Position, Map.ControlledGameObject!.FOVRadius, Distance.Chebyshev);
         }
         #endregion
     }

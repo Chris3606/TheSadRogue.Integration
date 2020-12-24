@@ -18,24 +18,24 @@ namespace TheSadRogue.Integration
     /// Arguments to ControlledGameObjectChanged event.
     /// </summary>
     [PublicAPI]
-    public class ControlledGameObjectChangedArgs : EventArgs
+    public class ControlledGameObjectChangedArgs<T> : EventArgs where T : RoguelikeEntity
     {
         /// <summary>
         /// The old object that was previously assigned to the field.
         /// </summary>
-        public RoguelikeEntity? OldObject { get; }
+        public T? OldObject { get; }
 
         /// <summary>
         /// The new object that was previously assigned to the field.
         /// </summary>
-        public RoguelikeEntity? NewObject { get; }
+        public T? NewObject { get; }
 
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="oldObject"/>
         /// <param name="newObject"/>
-        public ControlledGameObjectChangedArgs(RoguelikeEntity? oldObject, RoguelikeEntity? newObject)
+        public ControlledGameObjectChangedArgs(T? oldObject, T? newObject)
         {
             OldObject = oldObject;
             NewObject = newObject;
@@ -47,7 +47,37 @@ namespace TheSadRogue.Integration
     /// that render the objects on the map.
     /// </summary>
     [PublicAPI]
-    public class RoguelikeMap : Map
+    public class RoguelikeMap : RoguelikeMap<RoguelikeEntity>
+    {
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
+        /// <param name="numberOfEntityLayers"></param>
+        /// <param name="distanceMeasurement"></param>
+        /// <param name="layersBlockingWalkability"></param>
+        /// <param name="layersBlockingTransparency"></param>
+        /// <param name="entityLayersSupportingMultipleItems"></param>
+        /// <param name="customPlayerFOV"></param>
+        /// <param name="customPather"></param>
+        /// <param name="customComponentContainer"></param>
+        public RoguelikeMap(int width, int height, int numberOfEntityLayers, Distance distanceMeasurement,
+                            uint layersBlockingWalkability = 4294967295, uint layersBlockingTransparency = 4294967295,
+                            uint entityLayersSupportingMultipleItems = 4294967295, FOV? customPlayerFOV = null,
+                            AStar? customPather = null, ITaggableComponentCollection? customComponentContainer = null)
+            : base(width, height, numberOfEntityLayers, distanceMeasurement, layersBlockingWalkability,
+                layersBlockingTransparency, entityLayersSupportingMultipleItems, customPlayerFOV, customPather,
+                customComponentContainer)
+        { }
+    }
+
+    /// <summary>
+    /// Like <see cref="RoguelikeMap"/>, except its ControlledGameObject is of a custom type.
+    /// </summary>
+    [PublicAPI]
+    public class RoguelikeMap<TControlled> : Map
+        where TControlled : RoguelikeEntity
     {
         private readonly List<ScreenSurface> _renderers;
         /// <summary>
@@ -55,12 +85,12 @@ namespace TheSadRogue.Integration
         /// </summary>
         public IReadOnlyList<ScreenSurface> Renderers => _renderers.AsReadOnly();
 
-        private RoguelikeEntity? _controlledGameObject;
+        private TControlled? _controlledGameObject;
 
         /// <summary>
         /// Object being controlled by a player.  When set, adds/removes objects from the map as appropriate.
         /// </summary>
-        public RoguelikeEntity? ControlledGameObject
+        public TControlled? ControlledGameObject
         {
             get => _controlledGameObject;
             set
@@ -76,14 +106,14 @@ namespace TheSadRogue.Integration
                 if (value != null && !Entities.Contains(value))
                     AddEntity(value);
                 
-                ControlledGameObjectChanged?.Invoke(this, new ControlledGameObjectChangedArgs(old, value));
+                ControlledGameObjectChanged?.Invoke(this, new ControlledGameObjectChangedArgs<TControlled>(old, value));
             }
         }
 
         /// <summary>
         /// Fired when <see cref="ControlledGameObject"/> is changed.
         /// </summary>
-        public event EventHandler<ControlledGameObjectChangedArgs>? ControlledGameObjectChanged;
+        public event EventHandler<ControlledGameObjectChangedArgs<TControlled>>? ControlledGameObjectChanged;
 
 
         /// <inheritdoc />
@@ -99,13 +129,22 @@ namespace TheSadRogue.Integration
             
             ObjectAdded += OnObjectAdded;
             ObjectRemoved += OnObjectRemoved;
+            PlayerFOV.Recalculated += PlayerFOVOnRecalculated;
         }
 
+        #region Renderer Generation/Syncing
+        private void PlayerFOVOnRecalculated(object? sender, FOVRecalculatedEventArgs e)
+        {
+            foreach (var surface in _renderers)
+                surface.IsDirty = true;
+        }
+        
         private void OnTerrainAppearanceChanged(object? sender, EventArgs e)
         {
             foreach (var surface in _renderers)
                 surface.IsDirty = true;
         }
+        
 
         /// <summary>
         /// Creates a renderer that renders this Map.  When no longer used, <see cref="DisposeOfRenderer"/> must
@@ -121,7 +160,7 @@ namespace TheSadRogue.Integration
             var (viewWidth, viewHeight) = viewSize ?? (Width, Height);
 
             // Create surface representing the terrain layer of the map
-            var cellSurface = new MapCellSurface(this, viewWidth, viewHeight);
+            var cellSurface = new MapCellSurface<TControlled>(this, viewWidth, viewHeight);
             
             // Create screen surface that renders that cell surface and keep track of it
             var renderer = new ScreenSurface(cellSurface, font, fontSize);
@@ -166,7 +205,7 @@ namespace TheSadRogue.Integration
                 
                 default:
                     throw new InvalidOperationException(
-                        $"Objects added to a {nameof(RoguelikeMap)} must be of type {nameof(RoguelikeTile)} or {nameof(RoguelikeEntity)}");
+                        $"Objects added to a {nameof(RoguelikeMap<TControlled>)} must be of type {nameof(RoguelikeTile)} for terrain, or {nameof(RoguelikeEntity)} for non-terrain");
             }
         }
 
@@ -190,5 +229,23 @@ namespace TheSadRogue.Integration
                     break;
             }
         }
+        #endregion
+        
+        #region ComponentForwarders
+        // TODO: Write others, or maybe even move to GoRogue.
+        /// <summary>
+        /// Gets all components on all objects of the specified type at the given location, in layer order
+        /// </summary>
+        /// <param name="position"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public IEnumerable<T> GetAllObjectComponents<T>(Point position)
+            where T : class
+        {
+            foreach (var entity in GetObjectsAt(position))
+                foreach (var component in entity.GoRogueComponents.GetAll<T>())
+                    yield return component;
+        }
+        #endregion
     }
 }

@@ -5,7 +5,7 @@ using SadRogue.Primitives;
 
 namespace TheSadRogue.Integration.Example.Entities
 {
-    public class Player : RoguelikeEntity
+    public class Player : ExampleEntity
     {
         public int FOVRadius { get; }
         
@@ -33,6 +33,9 @@ namespace TheSadRogue.Integration.Example.Entities
             {
                 if (this.CanMoveIn(dir))
                     Position += dir;
+                else
+                    CurrentMap?.Bump(this, Position + dir);
+                
                 return true;
             }
             

@@ -1,8 +1,19 @@
-﻿using SadConsole;
+﻿using GoRogue.GameFramework.Components;
+using SadConsole;
 using SadRogue.Primitives;
+using TheSadRogue.Integration.Example.Components;
 
 namespace TheSadRogue.Integration.Example.Terrain
 {
+    public class DoorBumpHandler : ComponentBase<Door>, IBumpHandler
+    {
+        public void OnBump(RoguelikeEntity bumper)
+        {
+            if (Parent == null || !Parent.Closed) return;
+            Parent.Closed = false;
+        }
+    }
+    
     /// <summary>
     /// Represents a dungeon door.
     /// </summary>
@@ -27,6 +38,7 @@ namespace TheSadRogue.Integration.Example.Terrain
         {
             _closed = closed;
             OnClosedChanged(_closed);
+            GoRogueComponents.Add(new DoorBumpHandler());
         }
 
         protected virtual void OnClosed()

@@ -14,9 +14,9 @@ namespace TheSadRogue.Integration.Example.MapGeneration
     /// </summary>
     public class TranslateToMapStep : GenerationStep
     {
-        public string? WallFloorComponentTag;
-        public string? DoorListComponentTag;
-        public string? MapTag;
+        public readonly string? WallFloorComponentTag;
+        public readonly string? DoorListComponentTag;
+        public readonly string? MapTag;
         
         public TranslateToMapStep(string? name = null, string? wallFloorComponentTag = "WallFloor",
                                   string? doorListComponentTag = "Doors", string? mapTag = "Map")
@@ -29,6 +29,7 @@ namespace TheSadRogue.Integration.Example.MapGeneration
             MapTag = mapTag;
         }
         
+        // Implement to take data in context from generation algorithms and turn it into a map
         protected override IEnumerator<object?> OnPerform(GenerationContext context)
         {
             // Retrieve required components
