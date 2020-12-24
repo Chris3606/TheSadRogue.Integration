@@ -4,8 +4,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TheSadRogue.Integration", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TheSadRogue.Integration.Example", "TheSadRogue.Integration.Example\TheSadRogue.Integration.Example.csproj", "{FA23CD62-EC34-4B6A-BAC8-A821BCE849CE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TheSadRogue.Integration.ExampleNew", "TheSadRogue.Integration.ExampleNew\TheSadRogue.Integration.ExampleNew.csproj", "{FF9EB791-0C6F-421C-8BD5-722E9E45800E}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -20,9 +18,5 @@ Global
 		{FA23CD62-EC34-4B6A-BAC8-A821BCE849CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FA23CD62-EC34-4B6A-BAC8-A821BCE849CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FA23CD62-EC34-4B6A-BAC8-A821BCE849CE}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FF9EB791-0C6F-421C-8BD5-722E9E45800E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FF9EB791-0C6F-421C-8BD5-722E9E45800E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FF9EB791-0C6F-421C-8BD5-722E9E45800E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FF9EB791-0C6F-421C-8BD5-722E9E45800E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
