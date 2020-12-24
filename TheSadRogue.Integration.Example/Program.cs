@@ -1,7 +1,9 @@
 ﻿using GoRogue.MapGeneration;
 using SadConsole;
+using SadConsole.Host;
 using TheSadRogue.Integration.Example.MapGeneration;
 using TheSadRogue.Integration.Example.Screens;
+using Game = SadConsole.Game;
 
 namespace TheSadRogue.Integration.Example
 {
@@ -21,6 +23,10 @@ namespace TheSadRogue.Integration.Example
 
             // Hook the start event so we can add consoles to the system.
             Game.Instance.OnStart = Init;
+            
+            // Unlock FPS
+            Global.GraphicsDeviceManager.SynchronizeWithVerticalRetrace = false;
+            Game.Instance.MonoGameInstance.IsFixedTimeStep = false;
                         
             // Start the game.
             Game.Instance.Run();
@@ -30,9 +36,9 @@ namespace TheSadRogue.Integration.Example
         private static void Init()
         {
             // Generate a map
-            var generator = new Generator(100, 70);
+            var generator = new Generator(250, 250);
             generator
-                .AddSteps(DefaultAlgorithms.BasicRandomRoomsMapSteps())
+                .AddSteps(DefaultAlgorithms.RectangleMapSteps())
                 .AddStep(new TranslateToMapStep())
                 .Generate();
             var map = generator.Context.GetFirst<ExampleMap>();

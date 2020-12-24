@@ -148,7 +148,6 @@ namespace TheSadRogue.Integration.New
             var screenSurface = new ScreenSurface(viewWidth, viewHeight, Width, Height);
             
             // TODO: Reverse this order of add to surface vs add objects when it won't cause NullReferenceException
-
             // Create and configure terrain renderer
             var terrainRenderer = new Renderer { DoEntityUpdate = false };
             screenSurface.SadComponents.Add(terrainRenderer);
@@ -156,7 +155,7 @@ namespace TheSadRogue.Integration.New
             {
                 if (terrain == null)
                     continue;
-
+            
                 terrainRenderer.Add(terrain);
             }
 

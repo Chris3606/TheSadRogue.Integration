@@ -12,7 +12,7 @@ namespace TheSadRogue.Integration.ExampleNew.Entities
 
         public Player(Point position, int fovRadius)
             : base(new ColoredGlyph(Color.Yellow, Color.Transparent, '@'), position,
-                (int) MapLayer.Player, false)
+                (int)MapLayer.Player, false)
         {
             FOVRadius = fovRadius;
             UseKeyboard = true;

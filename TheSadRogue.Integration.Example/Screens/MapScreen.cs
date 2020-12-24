@@ -23,11 +23,13 @@ namespace TheSadRogue.Integration.Example.Screens
             // Initialize already added player, if there is one
             if (Map.ControlledGameObject != null)
             {
-                Debug.WriteLine("Focused.");
                 Map.ControlledGameObject.Moved += PlayerOnMoved;
                 Map.ControlledGameObject.IsFocused = true;
                 HandlePlayerMoved();
             }
+            
+            // Add FPS counter component
+            MapRenderer.SadComponents.Add(new Components.FPSCounterComponent());
         }
 
         #region Player Event Handling
@@ -53,7 +55,6 @@ namespace TheSadRogue.Integration.Example.Screens
         private void HandlePlayerMoved()
         {
             MapRenderer.Surface.View = MapRenderer.Surface.View.WithCenter(Map.ControlledGameObject!.Position);
-            MapRenderer.IsDirty = true;
             //Map.PlayerFOV.Calculate(Map.ControlledGameObject!.Position, Map.ControlledGameObject.FOVRadius, Distance.Chebyshev);
         }
         #endregion

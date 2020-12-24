@@ -26,6 +26,9 @@ namespace TheSadRogue.Integration.ExampleNew.Screens
                 Map.ControlledGameObject.IsFocused = true;
                 HandlePlayerMoved();
             }
+            
+            // Add FPS Counter
+            MapRenderer.SadComponents.Add(new Components.FPSCounterComponent());
         }
 
         #region Player Event Handling
@@ -51,7 +54,6 @@ namespace TheSadRogue.Integration.ExampleNew.Screens
         private void HandlePlayerMoved()
         {
             MapRenderer.Surface.View = MapRenderer.Surface.View.WithCenter(Map.ControlledGameObject!.Position);
-            MapRenderer.IsDirty = true;
             //Map.PlayerFOV.Calculate(Map.ControlledGameObject!.Position, Map.ControlledGameObject.FOVRadius, Distance.Chebyshev);
         }
         #endregion

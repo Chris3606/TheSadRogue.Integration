@@ -24,7 +24,7 @@ namespace TheSadRogue.Integration.ExampleNew.Terrain
         }
 
         public Door(Point position, bool closed = true)
-            : base(new ColoredGlyph(Color.White, Color.Transparent), position, 0, false, false)
+            : base(new ColoredGlyph(Color.White, Color.Transparent), position, (int)MapLayer.Terrain, false, false)
         {
             _closed = closed;
             OnClosedChanged(_closed);

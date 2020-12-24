@@ -21,8 +21,8 @@ namespace TheSadRogue.Integration.ExampleNew.MapGeneration
         public TranslateToMapStep(string? name = null, string? wallFloorComponentTag = "WallFloor",
                                   string? doorListComponentTag = "Doors", string? mapTag = "Map")
             : base(name, 
-                (typeof(IGridView<bool>), wallFloorComponentTag), 
-                (typeof(DoorList), doorListComponentTag))
+                (typeof(IGridView<bool>), wallFloorComponentTag))//, 
+                //(typeof(DoorList), doorListComponentTag))
         {
             WallFloorComponentTag = wallFloorComponentTag;
             DoorListComponentTag = doorListComponentTag;
@@ -33,7 +33,7 @@ namespace TheSadRogue.Integration.ExampleNew.MapGeneration
         {
             // Retrieve required components
             var wallFloor = context.GetFirst<IGridView<bool>>(WallFloorComponentTag);
-            var doors = context.GetFirst<DoorList>(DoorListComponentTag);
+            //var doors = context.GetFirst<DoorList>(DoorListComponentTag);
             
             // Create the map
             var map = new ExampleMap(context.Width, context.Height);
@@ -44,11 +44,11 @@ namespace TheSadRogue.Integration.ExampleNew.MapGeneration
             yield return null;
             
             // Place doors at appropriate locations
-            foreach (var (_, doorList) in doors.DoorsPerRoom)
-                foreach (var door in doorList.Doors)
-                    map.SetTerrain(new Door(door));
+            //foreach (var (_, doorList) in doors.DoorsPerRoom)
+            //    foreach (var door in doorList.Doors)
+            //        map.SetTerrain(new Door(door));
 
-            yield return null;
+            //yield return null;
             
             // Spawn player
             var player = new Player(map.WalkabilityView.RandomPosition(true), 10);
